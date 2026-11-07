@@ -1,0 +1,234 @@
+================================================================================
+                    SNAPPRICE MX - DETALLES DEL SISTEMA & ROADMAP
+================================================================================
+Nombre de la App: SnapPrice MX
+Versión Actual: En desarrollo (búsqueda de anuncios activos de Mercado Libre integrada; acceso externo por verificar)
+Mercado Objetivo: México (Precios expresados en Pesos Mexicanos - MXN)
+Especialización de Categoría: Consolas de Videojuegos, Juegos Físicos, Accesorios y Coleccionables Gamer
+Stack Técnico: React 19 + TypeScript + Express Full-Stack + Gemini API + Firebase (Auth & Firestore) + Tailwind CSS v4
+Última Actualización: Noviembre 2026
+
+--------------------------------------------------------------------------------
+1. RESUMEN EJECUTIVO & PROPUESTA DE VALOR
+--------------------------------------------------------------------------------
+SnapPrice MX es un prototipo en desarrollo para identificar productos con IA y
+consultar anuncios activos de Mercado Libre MX. La disponibilidad de la API debe
+verificarse en el entorno de despliegue.
+
+Permite tomar una foto o describir un producto. La IA sugiere su identificación;
+si Mercado Libre responde, la app muestra publicaciones activas. Los anuncios no
+indican el precio final de venta.
+
+Capacidades actuales:
+  1. Identificación sugerida por IA; las variantes deben verificarse con el usuario.
+  2. Flujo Guiado por la Cámara: 4 retículas especializadas con guías de encuadre láser 
+     para Consola, Portada/Caja, Control/Sticks (inspección de drift) y Etiqueta de Serie.
+  3. Consulta de anuncios activos de Mercado Libre MX; muestra enlaces y hora de consulta.
+  4. Solo muestra una mediana de precios anunciados si encuentra al menos tres publicaciones en MXN.
+  5. No accede a ventas cerradas; las recomendaciones y exportaciones de precio siguen desactivadas.
+  6. Preguntas de Apoyo Rápidas: Atajos táctiles en 1 toque para configurar empaque, 
+     edición con lector vs digital, estado de mandos y cables originales.
+
+--------------------------------------------------------------------------------
+2. DICCIONARIO COMPLETO DE FUNCIONES Y SUS DETALLES
+--------------------------------------------------------------------------------
+
+A. SERVIDOR BACKEND (server.ts)
+--------------------------------------------------------------------------------
+1. `GET /api/health`
+   - Propósito: Endpoint de diagnóstico y salud del servicio en tiempo real.
+   - Parámetros: Ninguno.
+   - Retorno: JSON con `{ status: "ok", service, hasKey, currency: "MXN", marketplaces, timestamp }`.
+
+2. `POST /api/evaluate`
+   - Propósito: Identifica productos con Gemini y devuelve estimaciones de IA; no consulta fuentes de mercado.
+   - Parámetros (Body JSON): `imageBase64`, `mimeType`, `description`, `userIntent`, `microAnswers`, `selectedCondition`.
+   - Retorno: JSON estructurado. Si Gemini no está configurado o falla, devuelve un error HTTP y no una valuación heurística.
+
+3. `startServer()`
+   - Propósito: Inicializa el servidor Express con Vite integrado en dev o dist/ en prod.
+
+B. INTEGRACIÓN FIREBASE (src/lib/firebase.ts)
+--------------------------------------------------------------------------------
+6. `testFirestoreConnection()`
+7. `loginWithGoogle()` (Manejo silencioso de 'auth/popup-closed-by-user')
+8. `logoutUser()`
+9. `saveValuationToCloud(userId, valuation)`
+10. `fetchUserValuationsFromCloud(userId)`
+11. `deleteValuationFromCloud(userId, valuationId)`
+
+C. VISTA PRINCIPAL (src/App.tsx)
+--------------------------------------------------------------------------------
+12. `handleLogin()` / `handleLogout()`
+13. `handleEvaluate(data)`
+14. `handleRecalculateMicro()`
+15. `handleSelectSample(sample)`
+16. `handleSelectHistoryItem(item)`
+17. `handleClearHistory()`
+18. `handleCameraCapture(base64Image)`
+19. `showNotification(msg)`
+20. `scrollToTop()`
+21. `handleNavigateSection(sectionId)`
+22. `handleTriggerPhotoUpload()`: Disparador del CTA de alta conversión (cámara o selector de archivos con 1 toque).
+
+D. HUB DE ENTRADA VISUAL & ATAJOS GAMER (src/components/ValuationInput.tsx)
+--------------------------------------------------------------------------------
+23. `processFile(file)`: Compresión y escalado en cliente con Canvas (1280px / JPEG 88%).
+24. `handleFileChange(e)` / `handleDragOver(e)` / `handleDragLeave()` / `handleDrop(e)`
+25. `handleSubmit(e)` / `clearImage()`
+26. `Preguntas de Apoyo Rápidas / Atajos Gamer`: Botones de 1 toque para inyectar modelos y características críticas (PS5 Slim, Switch OLED, Xbox Series X, Con Lector, Digital, Sin Drift al 100%, Con Caja Original).
+
+E. FLUJO GUIADO POR LA CÁMARA (src/components/CameraCapture.tsx)
+--------------------------------------------------------------------------------
+27. `startCamera()` / `stopCamera()` / `switchCamera()` / `handleCapture()`
+28. `setGuideMode(mode)`: Alterna entre 4 modos de encuadre asistido:
+    - `console`: Encuadre horizontal para capturar carcasas, ventilas y puertos.
+    - `game_box`: Encuadre vertical para carátulas y estado de portada.
+    - `controller`: Retícula oval centrada en los sticks análogos para detección de drift y desgaste.
+    - `serial_label`: Macro-guía para encuadrar la etiqueta de modelo y serie (CFI, CUH, HAC).
+29. `guideInfo`: Despliega consejos de iluminación y posición en tiempo real sobre el visor de la cámara.
+
+F. SUGERENCIA DE VENTA AL DÍA DE HOY
+--------------------------------------------------------------------------------
+La tarjeta fue retirada: no hay datos para sustentar velocidad de venta, demanda
+ni horarios recomendados.
+
+G. TRANSPARENCIA TOTAL & VALOR JUSTO (src/components/TransparentMarketPanel.tsx)
+--------------------------------------------------------------------------------
+33. El panel informa que no hay comparables verificados hasta conectar una fuente de mercado.
+
+H. REPORTES, CERTIFICADOS Y PÓSTERS 9:16 (ReportModal.tsx & StoryCardModal.tsx)
+--------------------------------------------------------------------------------
+36. `generateCleanReportText()`: Genera reporte en texto limpio.
+37. `handlePrint()`: Cuadro de impresión nativo para Certificado PDF con Folio Único y Marca de Agua.
+38. `handleShareWhatsAppListing()` / `handleShareWhatsAppNegotiation()` / `handleShareWhatsApp()`
+39. `generateAndDownloadImage()`: Renderiza el póster en alta resolución 1080x1920 (Canvas 2D) para Historias de WhatsApp e Instagram.
+
+--------------------------------------------------------------------------------
+3. HISTORIAL DE CAMBIOS (CHANGELOG) Y PROTOCOLO DE REGISTRO
+--------------------------------------------------------------------------------
+*CADA MODIFICACIÓN EN LA APLICACIÓN SE DETALLA EN ESTA SECCIÓN*
+
+[2026-11-01] - Versión 1.0.0
+- Lanzamiento inicial con los 4 pilares y motor matemático en MXN.
+
+[2026-11-01] - Versión 1.1.0
+- Integración de Firebase Auth & Cloud Firestore.
+- Auditoría de endpoints y compresión de fotos en cliente (1280px).
+
+[2026-11-01] - Versión 1.2.0 (Cyber-Neon & Marketing Edition)
+- Flip Card 3D interactiva reversible.
+- Estética Cyber-Techno Neón y documentación JSDoc en todo el sistema.
+
+[2026-11-01] - Versión 1.2.1
+- Blindaje de Firebase Auth contra cancelaciones voluntarias de popup.
+
+[2026-11-01] - Versión 1.2.2 / 1.2.3
+- Hero minimalista directo y botones Call to Action (Hero y Barra Móvil Inferior).
+
+[2026-11-06] - Versión 1.3.0
+- Generador de Fichas Gráficas 9:16 para Historias de WhatsApp e Instagram (PNG 1080x1920).
+- Certificado Oficial de Avalúo Imprimible / PDF con Folio Único y Marca de Agua.
+- Enlaces de comparación directa en Mercado Libre, Marketplace y Amazon.
+- Botones de compartir en WhatsApp con 1 clic en C2C y Flipping.
+
+[2026-11-06] - Versión 1.4.0 (Gaming & Consoles Focus, Guided Viewfinder & Live Ecommerce Benchmarks)
+- Enfoque Especializado en Videojuegos y Consolas de México:
+  * Catálogo de prueba 100% gamer: PS5 con DualSense, Nintendo Switch OLED, Xbox Series X y Zelda Tears of the Kingdom.
+  * Reconocimiento ampliado de consolas, revisiones Slim/Pro/OLED/Lite, juegos físicos y mandos.
+- Flujo Guiado por la Cámara:
+  * Nuevo visor asistido con 4 modos de retícula interactiva: Consola Completa, Portada/Caja, Control/Sticks y Etiqueta de Serie/Modelo.
+  * Consejos de iluminación y detección automática de número de serie en pantalla.
+- Sugerencia de Venta al Día de Hoy (`TodaySaleCard.tsx`):
+  * Muestra la fecha dinámica en México (ej. Viernes, 6 de noviembre de 2026).
+  * Precio recomendado para liquidar hoy, velocidad de venta (24-48 hrs), liquidez gamer y mejor horario para publicar (6:00 PM a 9:30 PM).
+  * Botón "Oferta Express WhatsApp" con mensaje directo preformateado.
+- Transparencia Total de Comercio Electrónico (`TransparentMarketPanel.tsx`):
+  * Conexión y muestreo de publicaciones reales en Mercado Libre MX, Facebook Marketplace, Amazon México y eBay México con precio verificado y enlace directo.
+  * Desglose matemático del Valor de Mercado Justo (FMV): Muestra la cantidad de publicaciones analizadas, purga de atípicos (-40% estafas, +35% sobreprecio) y mediana matemática limpia.
+- Preguntas de Apoyo Rápidas en `ValuationInput.tsx`:
+  * Atajos táctiles en 1 toque para inyectar especificaciones gamer (Con Lector, Digital, Sin Drift, Con Caja Original, 2 Controles).
+
+[2026-11-06] - Versión 1.4.1 (Auditoría Exhaustiva de Endpoints, Resiliencia y Consistencia Total)
+- Auditoría y Blindaje de Endpoints Backend:
+  * `POST /api/evaluate`: Inyección de `Promise.race` con timeout de 12 segundos para garantizar que llamadas a la IA nunca se queden congeladas o colgadas; extractor Regex `/\{[\s\S]*\}/` para parseo inmune a markdown exterior; fallback matemático heurístico instantáneo en caso de contingencia.
+  * `GET /api/health`: Verificación completa de respuesta HTTP 200 con claves activas, moneda MXN y estado de marketplaces.
+
+- Sanitización y Cuota de Firestore (`firebase.ts`):
+  * Blindaje en `saveValuationToCloud`: Se eliminan cadenas base64 masivas (>50KB) del objeto `resultData` antes de guardar en Firestore, evitando alcanzar el límite estricto de 1MB por documento.
+  * Silenciamiento elegante de error `permission-denied` en `testFirestoreConnection` previo a inicio de sesión.
+- Seguridad en Canvas y Generación de Pósters 9:16 (`StoryCardModal.tsx`):
+  * Eliminación de `crossOrigin = 'anonymous'` en imágenes locales con esquema `data:` para erradicar errores de `SecurityError` (Canvas Tainting).
+  * Timeout de 2.5s garantizado para carga de imágenes en segundo plano.
+- Consistencia en Recálculos Rápidos (`App.tsx`):
+  * Sincronización completa de `handleRecalculateMicro` para recalcular dinámicamente precios por plataforma, sugerencia de venta al día de hoy y microfactores gamer.
+- Documentación Ejecutiva y Técnica Oficial (`README.md`):
+  * Creación del archivo `README.md` principal con especificaciones completas de arquitectura, contratos de API, blindajes de resiliencia, especialización gamer, changelog y hoja de ruta con posibles mejoras.
+
+[2026-11-06] - Versión 1.4.2 (Blindaje Integral de Seguridad Firebase & Zero-Trust ABAC)
+- Desmitificación y Arquitectura de Claves:
+  * Aislamiento total de claves secretas: `GEMINI_API_KEY` reside exclusivamente en el backend Node.js (`server.ts`) y nunca es expuesta al frontend ni a la consola del navegador.
+  * Clarificación sobre Firebase `apiKey`: Se documentó y protegió entendiendo que en Firebase el apiKey es un identificador público de cliente, y que la verdadera barrera de seguridad reside en las reglas de Firestore.
+- Reglas de Seguridad Fortress (`firestore.rules`):
+  * Implementación de Control de Acceso Basado en Atributos (ABAC) y Zero-Trust.
+  * Helper `isValidId` que exige cadenas alfanuméricas seguras (`^[a-zA-Z0-9_-]+$`) de hasta 128 caracteres, neutralizando ataques de inyección de rutas (ID Poisoning).
+  * Funciones de validación estricta de esquema: `isValidUser` y `isValidValuation` con límites de longitud (`.size()`), validación de tipos y rangos numéricos.
+  * Bloqueo estricto de campos inmutables: El UID y el ID de cotización no pueden ser alterados en actualizaciones.
+  * Despliegue en caliente a producción ejecutado con éxito vía `deploy_firebase`.
+- Sanitización de IDs en Cliente (`src/lib/firebase.ts`):
+  * Sanitización automática de IDs de documentos con `replace(/[^a-zA-Z0-9_-]/g, '_')` en `saveValuationToCloud` y `deleteValuationFromCloud`.
+
+[2026-11-06] - Versión 1.4.3 (Arquitectura Modular, Vitest Suite, Rate Limiting & Docker)
+- Separación de Catálogo Público vs Valuaciones Privadas en Firestore:
+  * Reglas para `/public_catalog/{catalogId}` y `/market_benchmarks/{benchmarkId}` con `allow get, list: if true` y `allow write: if false`.
+  * Valuaciones privadas `/users/{userId}/valuations/{valuationId}` estrictamente restringidas a `isOwner(userId)` con validación de payload `incoming()`.
+  * Ausencia total de `allow read, write: if true` en todo el proyecto.
+- Seguridad en el Servidor (`server.ts`):
+  * Cabeceras de seguridad HTTP: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection`, `Referrer-Policy`.
+  * Limitador de tasa (Rate Limiter) en memoria por IP (máximo 30 peticiones/minuto) para proteger contra DoS y abuso de cuota de IA.
+  * Validación estricta del tamaño de imagen (máx 15MB) y tipos MIME autorizados en `POST /api/evaluate`.
+- Validación de Archivos en Cliente (`src/utils/pricing.ts` & `ValuationInput.tsx`):
+  * Módulo reutilizable `validateImageFile` que previene subidas mayores a 10MB o tipos no permitidos con banner visual de error.
+- Suite de Pruebas Unitarias Automatizadas (Vitest):
+  * Configuración del script `"test": "vitest run"` en `package.json`.
+  * 9 pruebas unitarias en `tests/pricing.test.ts` evaluando detección de estafas, purga de outliers, cálculo de mediana FMV, venta rápida y validación de imágenes (100% passing).
+- Despliegue en Producción y Contenedores:
+  * Creación de `Dockerfile` multi-etapa y `.dockerignore` para despliegue en Google Cloud Run o VPS.
+  * Especificación de motor Node `"engines": { "node": ">=18.0.0" }`.
+
+[2026-11-06] - Rectificación de disponibilidad de datos y fallbacks
+- Las versiones anteriores de este documento afirmaban que existían comparables en vivo, precios verificados y recomendaciones de venta por horario. Esas afirmaciones no describían el comportamiento real.
+- Se eliminaron la valuación heurística de respaldo y el recálculo local de precios. Los errores de IA ahora se comunican como errores HTTP.
+- Se retiró la tarjeta de venta "al día de hoy". Los precios de Gemini siguen siendo estimaciones orientativas, no evidencia de mercado.
+- Se integró la búsqueda backend de publicaciones activas de Mercado Libre MX. La disponibilidad real depende de acceso a la API; los anuncios no equivalen a ventas cerradas.
+- La consulta sin credenciales desde el entorno de desarrollo recibió HTTP 403. `MELI_ACCESS_TOKEN` puede configurarse solo en el backend para validar acceso; su renovación OAuth aún no está implementada.
+- Se desactivaron recomendaciones de compra/venta y exportaciones de precio hasta tener datos de transacciones y validar el método.
+
+================================================================================
+4. PRÓXIMOS CAMBIOS Y MEJORAS PLANIFICADAS (ROADMAP)
+================================================================================
+
+FASE 1: MEJORAS DE EXPORTACIÓN & REDES SOCIALES
+--------------------------------------------------------------------------------
+[x] 1. Generador de Imagen para Historias / Estado de WhatsApp (9:16).
+[x] 2. Exportación a PDF con Folio Único y Marca de Agua.
+[x] 3. Compartir directo a WhatsApp con 1 clic.
+[ ] 4. Comparación con datos reales de plataformas mexicanas.
+
+FASE 2: ESPECIALIZACIÓN GAMER & TRANSPARENCIA
+--------------------------------------------------------------------------------
+[ ] 5. Validar identificación de variantes de videojuegos y consolas.
+[x] 6. Flujo guiado por la cámara con retículas para consolas, cajas, controles y número de serie.
+[ ] 7. Estimar velocidad y horario usando datos de transacciones observadas.
+[ ] 8. Muestreo de comercio electrónico y cálculo de rango a partir de comparables verificables.
+[x] 9. Preguntas de apoyo rápidas y atajos táctiles de especificación gamer.
+
+FASE 3: HERRAMIENTAS AVANZADAS PARA COLECCIONISTAS & FLIPPERS (Mediano Plazo)
+--------------------------------------------------------------------------------
+[ ] 10. Valuador de Lotes / Paquetes Gamer (ej. consola + 5 juegos en bulto).
+[ ] 11. Escáner de Códigos de Barras UPC de Videojuegos con la cámara.
+[ ] 12. Calculadora de Comisiones Desglosada para Mercado Libre Clásica vs Premium.
+
+================================================================================
+Fin del Documento · SnapPrice MX · 2026
+================================================================================

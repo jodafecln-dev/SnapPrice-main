@@ -1,0 +1,6 @@
+{
+  "name": "SnapPrice MX - Valuación Visual de Productos",
+  "description": "Motor de inteligencia central para valuación y cotización visual de productos en México en MXN. Analiza fotos y descripciones para venta particular, flipping, compra segura e investigación de mercado.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

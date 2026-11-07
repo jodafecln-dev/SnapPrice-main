@@ -1,0 +1,115 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL SECURITY PRIMITIVES (ZERO-TRUST & ABAC)
+    // =========================================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // =========================================================================
+    // ENTITY VALIDATION BLUEPRINTS (ANTI-UPDATE-GAP & RESOURCE PROTECTION)
+    // =========================================================================
+
+    // Valida la estructura del perfil de usuario (/users/{userId})
+    function isValidUser(data) {
+      return data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'lastLogin', 'createdAt'])
+        && data.uid is string && data.uid == request.auth.uid
+        && data.email is string && data.email.size() <= 254
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150))
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 2000))
+        && (!('lastLogin' in data) || (data.lastLogin is string && data.lastLogin.size() <= 100))
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100));
+    }
+
+    // Valida la estructura de una cotización guardada (/users/{userId}/valuations/{valuationId})
+    function isValidValuation(data, userId) {
+      return data.keys().hasOnly([
+          'id', 'userId', 'productName', 'brand', 'model', 'condition', 'usedAverage',
+          'fastSalePrice', 'userIntent', 'imageUrl', 'resultData', 'createdAt', 'timestamp'
+        ])
+        && data.userId is string && data.userId == userId && data.userId == request.auth.uid
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.productName is string && data.productName.size() > 0 && data.productName.size() <= 300
+        && (!('brand' in data) || (data.brand is string && data.brand.size() <= 150))
+        && (!('model' in data) || (data.model is string && data.model.size() <= 150))
+        && (!('condition' in data) || (data.condition is string && data.condition.size() <= 100))
+        && data.usedAverage is number && data.usedAverage >= 0 && data.usedAverage <= 10000000
+        && data.fastSalePrice is number && data.fastSalePrice >= 0 && data.fastSalePrice <= 10000000
+        && (!('userIntent' in data) || (data.userIntent is string && data.userIntent.size() <= 50))
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 50000))
+        && (!('resultData' in data) || (data.resultData is string && data.resultData.size() <= 500000))
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 100));
+    }
+
+    // =========================================================================
+    // COLLECTION ACCESS RULES
+    // =========================================================================
+
+    // Documento principal de perfil de usuario
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming())
+        && incoming().uid == existing().uid;
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Subcolección de cotizaciones privadas del usuario
+      match /valuations/{valuationId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(valuationId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(valuationId)
+          && isValidValuation(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(valuationId)
+          && isValidValuation(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().id == existing().id;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(valuationId);
+      }
+    }
+
+    // =========================================================================
+    // PUBLIC PRICING CATALOG & BENCHMARKS (LECTURA PÚBLICA / ESCRITURA BLOQUEADA)
+    // =========================================================================
+    match /public_catalog/{catalogId} {
+      // Lectura pública permitida para consulta del catálogo referencial
+      allow get, list: if true;
+      // Escritura totalmente denegada para clientes no autorizados
+      allow write: if false;
+    }
+
+    match /market_benchmarks/{benchmarkId} {
+      // Lectura pública para benchmarks de mercado
+      allow get, list: if true;
+      // Escritura bloqueada desde el cliente
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // GLOBAL DEFAULT DENY CATCH-ALL
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "SnapPrice user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastLogin": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Valuation": {
+      "title": "Valuation",
+      "description": "Historical product valuation record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "productName": { "type": "string" },
+        "brand": { "type": "string" },
+        "model": { "type": "string" },
+        "category": { "type": "string" },
+        "condition": { "type": "string" },
+        "usedAverage": { "type": "number" },
+        "fastSalePrice": { "type": "number" },
+        "userIntent": { "type": "string" },
+        "resultData": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "productName", "usedAverage", "createdAt"]
+    },
+    "PublicCatalogItem": {
+      "title": "PublicCatalogItem",
+      "description": "Public gaming benchmark and price reference catalog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "benchmarkMXN": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "benchmarkMXN"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document accessible by the authenticated user"
+    },
+    "/users/{userId}/valuations/{valuationId}": {
+      "schema": "Valuation",
+      "description": "User's saved valuation records and quotes"
+    },
+    "/public_catalog/{catalogId}": {
+      "schema": "PublicCatalogItem",
+      "description": "Public pricing benchmark catalog readable by any user, write-restricted"
+    }
+  }
+}

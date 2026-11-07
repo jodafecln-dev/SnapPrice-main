@@ -1,0 +1,13 @@
+node_modules/
+build/
+dist/
+server-dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+serviceAccountKey.json
+firebase-admin-credentials.json
+google-application-credentials.json
+*-firebase-adminsdk-*.json
